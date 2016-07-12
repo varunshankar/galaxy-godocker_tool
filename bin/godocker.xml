@@ -1,0 +1,123 @@
+<tool id="godocker" name="Go-Docker" version="0.8">
+  <description>Go-Docker launcher</description>
+<command interpreter="python">
+godocker.py
+-n ${container.name}
+#if $container.image_choice.image_choice_selector == "default":
+ -i ${container.image_choice.image_list}
+#else
+ -i ${container.image_choice.image}
+ --external
+#end if
+-c '${command_line.command}'
+#for $dataset_repeat in $command_line.data
+ -d ${dataset_repeat.dataset}
+#end for
+--cpu ${container.cpu}
+--ram ${container.ram}
+-o $log
+</command>
+<inputs>
+  <!-- Input data files -->
+  <section name="container" title="Container infos" expanded="True">
+  <param name="name" type="text" label="Job name" value="job_name"/> 
+  <conditional name="image_choice">
+    <param name="image_choice_selector" type="select" label="Choose docker image mode">
+      <option value="default" selected="true">default</option>
+      <option value="custom">custom</option>
+    </param>
+    <when value="default">
+       <param name="image_list" type="select" label="Choose docker image">
+         <option value="centos:latest" selected="true">centos</option>
+         <option value="rastasheep/ubuntu-sshd">ubuntu</option>
+         <option value="osallou/dockernode">GenOuest</option>
+       </param>
+    </when>
+    <when value="custom">
+      <param name="image" type="text" label="Custom docker image url" help="" />
+    </when>
+  </conditional>
+   <param name="cpu" type="integer" value="2" min="1" max="8" label="Choose CPU number" />
+   <param name="ram" type="integer" value="2" min="1" max="16" label="Choose RAM (Gb)" />
+   </section>
+   <section name="command_line" title="Command line" expanded="True">
+   <param name="command" type="text" value="echo toto" label="Command line" help="use ::dataset_x to match with the dataset in the position x below. See the help for a picture example.">
+     <sanitizer sanitize="False"/>
+   </param>
+  <repeat name="data" title="Dataset collection">
+     <param name="dataset" type="data" label="Dataset" />
+  </repeat>
+  </section>
+</inputs>
+
+<outputs>
+      <data format="txt" name="log" label="${tool.name} on ${on_string}: godocker.log" >
+          <discover_datasets pattern="__designation_and_ext__" directory="godocker_outputs" visible="true" /> 
+      </data>
+</outputs>
+<stdio>
+  <exit_code range="1" level="fatal" description="Error in Godocker execution" />
+</stdio>  
+<help>
+
+**Go-Docker tool**
+
+This tool is linked to the Genouest Godocker prototype server : https://godocker.genouest.org
+
+Each job run as a unique Galaxy user.
+
+------
+
+**Docker**
+
+Docker allows you to package an application with all of its dependencies into a standardized unit for software development.
+
+Docker containers wrap up a piece of software in a complete filesystem that contains everything it needs to run:
+
+ - code
+ - runtime
+ - system tools
+ - system libraries
+ - anything you can install on a server. 
+
+This guarantees that it will always run the same, regardless of the environment it is running in. 
+
+------
+
+**Go-Docker**
+
+Go-Docker is a cluster management tool using Docker as execution/isolation system. 
+
+It can be seen like Sun Grid Engine/Torque/... 
+
+The software does not manage however itself the dispatch of the commands on the remote nodes. 
+
+For this, it integrates with container management tools (Docker Swarm, Apache Mesos, ...) 
+
+It acts as an additional layer above those tools on multiple user systems where users do not have Docker priviledges or knowledge.
+
+------
+
+**Docker Images**
+
+There are three default images: 
+
+ - ubuntu : classic Ubuntu 14.04 image
+
+ - centos : classic CentOS 5 image
+
+ - GenOuest : this image is a clone of our software infrastructure (CentOS + bioinformatics sofware)
+
+
+You can specify a custom images by type a docker url. The image must be in the docker hub registry : https://hub.docker.com/
+
+------
+
+**Datasets links**
+
+.. image:: images/help_godocker_galaxy.png
+    :height: 300
+    :width: 900
+
+</help>
+</tool>
