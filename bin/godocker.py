@@ -21,21 +21,24 @@ from godockercli.utils import Utils
 def create_job_script(command, datasets, dir):
 
     # parse ::dataset_number in the command
-    nb_dataset = 0
-    if datasets:
-        for dataset in datasets:
-           nb_dataset += 1
-           command = command.replace("::dataset_"+str(nb_dataset), dir+"/"+os.path.basename(dataset))
+    for i in range(len(command)):
+        nb_dataset = 0
+        if datasets:
+            for dataset in datasets:
+                nb_dataset += 1
+                command[i] = command[i].replace("::dataset_"+str(nb_dataset), dir+"/"+os.path.basename(dataset))
 
-           if not os.path.exists(dir+"/"+os.path.basename(dataset)):
-               shutil.copy(dataset, dir+"/"+os.path.basename(dataset))
+                if not os.path.exists(dir+"/"+os.path.basename(dataset)):
+                    shutil.copy(dataset, dir+"/"+os.path.basename(dataset))
+    
 
     script = open("script.sh", "w")
     print "-------- script.sh --------"
     script.write("#!/bin/bash\n")
     print "#!/bin/bash"
-    script.write(command)
-    print command
+    cmd = (' ; ').join(command)
+    script.write(cmd)
+    print cmd
 
 def run_job(name, image, external, cpu, ram):
    
@@ -106,7 +109,7 @@ def __main__():
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', dest="name")
     parser.add_argument('-d', action='append', dest="datasets")
-    parser.add_argument('-c', dest="command")
+    parser.add_argument('-c', action='append', dest="command")
     parser.add_argument('-i', dest="image")
     parser.add_argument('--external', action='store_true')
     parser.add_argument('--cpu')
